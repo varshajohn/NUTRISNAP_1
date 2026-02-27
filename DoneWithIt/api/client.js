@@ -1,5 +1,5 @@
 // FILE: api/client.js
-const API_BASE_URL = 'http://10.162.62.185:3000/api'; // Ensure this IP is correct
+const API_BASE_URL = 'http://172.20.10.5:3000/api'; // Ensure this IP is correct
 
 const apiClient = async (endpoint, method = 'GET', body = null) => {
   try {

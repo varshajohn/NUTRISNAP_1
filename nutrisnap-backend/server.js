@@ -4,6 +4,12 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs'); 
 const User = require('./models/User'); 
+const { execFile } = require("child_process");
+const multer = require("multer");
+const path = require("path");
+const nutritionData = require('./data/nutrition.json');
+
+
 
 const app = express();
 
@@ -17,6 +23,16 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error(' MongoDB Connection error:', err));
 
 // --- ROUTES ---
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
 
 // 1. TEST ROUTE
 app.get('/', (req, res) => {
@@ -124,6 +140,46 @@ app.get('/api/todaySummary', (req, res) => {
 app.get('/api/diary', (req, res) => {
     res.json([]);
 });
+
+app.post("/api/detect-food", upload.single("image"), (req, res) => {
+  const imagePath = req.file.path;
+
+  const pythonCmd = "py";
+  const inferPath = path.join(__dirname, "..", "nutrisnap-ai", "infer.py");
+
+  const args = [
+    "-3.10",
+    inferPath,
+    imagePath
+  ];
+
+  execFile(pythonCmd, args, (error, stdout, stderr) => {
+    if (error) {
+      console.error("Python error:", stderr);
+      return res.status(500).json({ error: "Detection failed" });
+    }
+
+    try {
+     const detections = JSON.parse(stdout);
+
+// 🔥 enrich detections with nutrition
+const enrichedDetections = detections.map(d => ({
+  label: d.label,
+  confidence: d.confidence,
+  nutrition: nutritionData[d.label] || null
+}));
+
+res.json({ detections: enrichedDetections });
+
+    } catch (e) {
+      console.error("Invalid Python output:", stdout);
+      res.status(500).json({ error: "Invalid model output" });
+    }
+  });
+});
+
+
+
 
 
 // START SERVER

@@ -1,10 +1,11 @@
 from ultralytics import YOLO
 
-model = YOLO("runs/food_detection/v2_13class/weights/best.pt")
+model = YOLO("runs/food_detection/v5_9class/weights/best.pt")
 
 model(
     source="test_images",
-    conf=0.15, 
+    conf=0.25,
+    iou=0.6,
     save=True
 )
 
