@@ -62,3 +62,12 @@ dataset_raw/
 # YOLO dataset (Roboflow export)
 nutrisnap-ai/dataset/
 
+# Extra cleanup
+nutrisnap-backend/uploads/
+nutrisnap-ai/runs_backup/
+nutrisnap-ai/test_images/
+
+*.jpg
+*.png
+*.webp
+
